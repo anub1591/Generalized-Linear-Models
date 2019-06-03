@@ -1,0 +1,66 @@
+---
+title: "Generalized Linear Model"
+output: html_document
+---
+
+### Importing the Data
+```{r}
+# Importing the library containing the dataset
+library(survival)
+```
+
+### Fitting the model
+```{r}
+# Using glm () and specifying the parameters
+fitB1 = glm(cbind(status,1-status) ~ rx, family = binomial, data = rats) # logistic regression
+fitB1
+```
+
+### Generation of Summary Prediction
+```{r}
+summary(fitB1)$coef
+sqrt(diag(summary(fitB1)$cov.scaled))
+c(fitB1$deviance, -2*logLik(fitB1))
+c(fitB1$null.dev, -2*logLik(update(fitB1, formula = .~1)))
+```
+
+### Updating the model
+```{r}
+fitB2 = update(fitB1, family = binomial(link="probit")) # probit regression
+rbind(logit = fitB1$coef, probit = fitB2$coef, rescal.probit = fitB2$coef/0.5513)
+```
+
+### Updating the model again
+```{r}
+fitB3 = update(fitB1, formula = . ~ . + I(log(time))) # using log time predictor
+
+summary(rats$time[rats$status==1]) # descriptive statistics
+
+summary(rats$time[rats$status==0])
+
+cbind(rats[1:10,], model.matrix(fitB3)[1:10,])
+
+summary(fitB3)$coef
+
+c(2*(logLik(fitB3)-logLik(fitB1)), fitB1$dev-fitB3$dev)
+
+1-pchisq(24.373,1)
+```
+
+### Updating and adding the variables to the model 
+```{r}
+fitB4 = update(fitB3, .~. + I(rx*log(time)) + I(log(time)^2)) # adding log(time)^2 and rx*log(time)
+summary(fitB4)$coef
+
+fitB3$dev - fitB4$dev
+```
+
+### Analysis of Deviance Table
+```{r}
+anova(fitB4) 
+
+Devs = c(fitB1$null.dev, fitB1$dev, update(fitB3, .~.+I(rx*log(time)))$dev, fitB4$dev)
+Devs
+
+round (-diff(Devs), 3) ### successive differences of llks
+```

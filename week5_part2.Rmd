@@ -1,0 +1,112 @@
+---
+title: "Logistic Regression"
+output: html_document
+---
+
+### Importing the Data
+```{r}
+# Read CSV File
+mydata = read.csv("adult.csv")
+
+# Looking at the data/ Data head
+head(mydata)
+```
+
+
+
+### Checking the class bias
+```{r}
+table(mydata$ABOVE50K)
+```
+
+
+
+### Creating Training and Test Data
+```{r}
+# Creating Training Dataset
+input_ones <- mydata[which(mydata$ABOVE50K == 1), ] # all 1s
+input_zeros <- mydata[which(mydata$ABOVE50K == 0), ] # all 0s
+set.seed(150) # for repeatability of samples
+input_ones_train_rows <- sample(1:nrow(input_ones), 0.8*nrow(input_ones)) # 1s for training
+input_zeros_train_rows <- sample(1:nrow(input_zeros), 0.8*nrow(input_ones)) # 0s for training
+train_ones <- input_ones[input_ones_train_rows, ]
+train_zeros <- input_zeros[input_zeros_train_rows, ]
+trainData <- rbind(train_ones, train_zeros) # row bind the ones and zeros
+
+# Creating Test Dataset
+test_ones <- input_ones[-input_ones_train_rows, ]
+test_zeros <- input_zeros[-input_zeros_train_rows, ]
+testData <- rbind(test_ones, test_zeros) # row bind the ones and zeros
+```
+
+
+
+### Computing Information Values
+```{r}
+library(smbinning)
+# segregating continuous and factor variables
+factor_vars <- c ("WORKCLASS", "EDUCATION", "MARITALSTATUS", "OCCUPATION", "RELATIONSHIP", "RACE", "SEX", "NATIVECOUNTRY")
+continuous_vars <- c("AGE", "FNLWGT","EDUCATIONNUM", "HOURSPERWEEK", "CAPITALGAIN", "CAPITALLOSS")
+
+iv_df <- data.frame(VARS=c(factor_vars, continuous_vars), IV=numeric(14))  # in it for IV results
+
+# compute IV for categoricals
+for(factor_var in factor_vars){
+  smb <- smbinning.factor(trainData, y="ABOVE50K", x=factor_var)  # WOE table
+  if(class(smb) != "character"){ # heck if some error occured
+    iv_df[iv_df$VARS == factor_var, "IV"] <- smb$iv
+  }
+}
+
+# compute IV for continuous vars
+for(continuous_var in continuous_vars){
+  smb <- smbinning(trainData, y="ABOVE50K", x=continuous_var)  # WOE table
+  if(class(smb) != "character"){  # any error while calculating scores.
+    iv_df[iv_df$VARS == continuous_var, "IV"] <- smb$iv
+  }
+}
+
+iv_df <- iv_df[order(-iv_df$IV), ]  # sort
+iv_df
+```
+
+
+
+### Building Model and Predicting
+```{r}
+logitMod <- glm(ABOVE50K ~ RELATIONSHIP + AGE + CAPITALGAIN + OCCUPATION + EDUCATIONNUM, data=trainData, family=binomial(link="logit"))
+
+predicted <- plogis(predict(logitMod, testData))  # predicted scores
+
+# Optimal Prediction Probability Cutoff
+library(InformationValue)
+optCutOff <- optimalCutoff(testData$ABOVE50K, predicted)[1] 
+optCutOff
+```
+
+
+
+### Model Diagnostics
+```{r}
+summary(logitMod)
+
+# VIF
+library(car)
+vif(logitMod)
+
+# Misclassification Error
+misClassError(testData$ABOVE50K, predicted, threshold = optCutOff)
+
+# ROC
+plotROC(testData$ABOVE50K, predicted)
+
+# Concordance
+Concordance(testData$ABOVE50K, predicted)
+
+# Specificity and Sensitivity
+sensitivity(testData$ABOVE50K, predicted, threshold = optCutOff)
+specificity(testData$ABOVE50K, predicted, threshold = optCutOff)
+
+# Confusion Matrix
+confusionMatrix(testData$ABOVE50K, predicted, threshold = optCutOff)
+```
