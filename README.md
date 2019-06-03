@@ -1,2 +1,10 @@
 # Generalized-Linear-Models
 Performed Logistic Regression, Probit Regression and other Generalized Linear Models
+
+Machine learning is a field involving various analytical models built for the analysis of the data. It is a branch of artificial intelligence which aims at improving the response, behavior, and action of a machine on the basis of the data, experience, interaction, and knowledge. In simple words, it can be said that machine learning is a study wherein the machine learns on its own without being explicitly programmed. The process involves providing the data and then training the machine by building the model with the help of various algorithms. These algorithms are used differently, their selection is done on the basis of the data and the task which is to be performed. 
+
+The present assignment deals with Generalized Linear Models and Logistic Regression which are performed on two different datasets. Generalized Linear Model is an umbrella term comprising of various statistical models such as Poisson Regression, Linear Regression, Logistics Regression, etc. It even includes ANOVA and ANCOVA. Generalized Linear Models have three main components: Random Component which is the probability distribution of the dependent variable, Systematic Component wherein explanatory variables specify the linear combination and the Linking function which links the probability distribution with the linear predictor of explanatory variables.
+
+Logistic regression is a kind of regression which is used to define the relationship between the independent variables and the dependent variable expressed in the binary form i.e. 0 or 1. It forms the part of the Generalized Linear Model and is good at handling the multicollinearity but may lead to the problem of over-fitting in case of a large number of parameters. 
+
+In the present assignment, there are two parts: Part A and Part B. Both the parts contain different datasets. Part A contains the Rat Survival dataset on which Generalized Linear Model is applied and Part B contains the Census Income dataset on which Logistic Regression of GLM is performed.
